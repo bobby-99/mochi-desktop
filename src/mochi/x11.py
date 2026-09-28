@@ -1,4 +1,4 @@
-"""Small X11 window-manager helpers used by the GNOME XWayland fallback."""
+"""Small EWMH/X11 helpers used by Mochi desktop-overlay windows."""
 
 from __future__ import annotations
 
