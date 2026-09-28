@@ -37,12 +37,18 @@ def build_parser() -> argparse.ArgumentParser:
 def configure_display_backend(environment: MutableMapping[str, str]) -> bool:
     """Use XWayland for the pet on GNOME, following Codex's Linux approach."""
     desktop = environment.get("XDG_CURRENT_DESKTOP", "").casefold()
+    session_type = environment.get("XDG_SESSION_TYPE", "").casefold()
+    # Cinnamon/X11 should use the native X11 path. GNOME/Wayland keeps the
+    # existing XWayland compatibility path; other native Wayland desktops are
+    # left alone so layer-shell can be used when available.
     is_gnome_wayland = (
-        environment.get("XDG_SESSION_TYPE", "").casefold() == "wayland"
+        session_type == "wayland"
         and "gnome" in desktop
         and bool(environment.get("DISPLAY"))
     )
-    if not is_gnome_wayland or environment.get("MOCHI_NATIVE_WAYLAND") == "1":
+    if session_type != "wayland" or environment.get("MOCHI_NATIVE_WAYLAND") == "1":
+        return False
+    if not is_gnome_wayland:
         return False
 
     # Mutter does not expose layer shell. XWayland gives this small standalone
