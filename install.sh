@@ -312,7 +312,28 @@ if [[ ! -f "$ROOT/pyproject.toml" || ! -f "$DESKTOP_TEMPLATE" ]]; then
     exit 1
 fi
 
-if command -v dnf >/dev/null 2>&1 && command -v rpm >/dev/null 2>&1; then
+if command -v apt-get >/dev/null 2>&1 && command -v dpkg-query >/dev/null 2>&1; then
+    packages=(
+        python3 python3-pip python3-venv python3-gi python3-cairo
+        gir1.2-gtk-4.0 gir1.2-gdkx11-4.0 gir1.2-atspi-2.0
+        gstreamer1.0-tools gstreamer1.0-plugins-base gstreamer1.0-plugins-good
+        libx11-6 pipewire pipewire-bin pulseaudio-utils dbus libglib2.0-bin
+    )
+    missing=()
+    for package in "${packages[@]}"; do
+        if ! dpkg-query -W -f='${Status}' "$package" 2>/dev/null | grep -q 'install ok installed'; then
+            missing+=("$package")
+        fi
+    done
+    if (("${#missing[@]}")); then
+        step "Installing Debian/Ubuntu dependencies"
+        sudo apt-get update
+        sudo apt-get install -y "${missing[@]}"
+    else
+        step "Checking Debian/Ubuntu dependencies"
+        ok "Required Debian/Ubuntu packages are already installed"
+    fi
+elif command -v dnf >/dev/null 2>&1 && command -v rpm >/dev/null 2>&1; then
     packages=(
         python3
         python3-pip
@@ -345,7 +366,7 @@ if command -v dnf >/dev/null 2>&1 && command -v rpm >/dev/null 2>&1; then
         ok "Required Fedora packages are already installed"
     fi
 else
-    warn "Automatic dependency installation currently supports Fedora only."
+    warn "Automatic dependency installation is supported on Fedora and Debian/Ubuntu-based systems. Continuing with packages already available."
     warn "Continuing with the packages already available on this system."
 fi
 
