@@ -87,7 +87,12 @@ class MochiApplication(Gtk.Application):
                 background-color: transparent;
             }
 
-            window.mochi-menu-window {
+            /* Gtk.Window paints its toplevel background on the `window.background`
+             * CSS node. Cinnamon can otherwise composite an undecorated X11
+             * window as transparent even when the generic `window` selector
+             * has a background. Keep the explicit node selector for the menu.
+             */
+            window.background.mochi-menu-window {
                 background-color: @theme_bg_color;
                 color: @theme_fg_color;
                 border: 1px solid alpha(@theme_fg_color, 0.12);
@@ -96,7 +101,12 @@ class MochiApplication(Gtk.Application):
             }
 
             .mochi-menu-card {
-                background-color: transparent;
+                /* The card is the actual painted surface. Do not leave it
+                 * transparent on X11/Cinnamon, where an undecorated window
+                 * can otherwise show the desktop through the menu bounds. */
+                background-color: @theme_bg_color;
+                color: @theme_fg_color;
+                border-radius: 18px;
             }
 
             .mochi-menu-title {
