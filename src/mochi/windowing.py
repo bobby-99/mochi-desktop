@@ -1,4 +1,4 @@
-"""Optional Wayland layer-shell integration kept out of the GTK application."""
+"""Wayland layer-shell integration with a portable X11 fallback."""
 
 from __future__ import annotations
 
