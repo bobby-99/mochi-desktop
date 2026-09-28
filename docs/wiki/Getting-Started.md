@@ -3,7 +3,7 @@
 Mochi is currently an experimental Linux desktop companion under active development.
 
 For alpha testing, use the [README installer and update instructions](../../README.md#install).
-The primary tested configuration is Fedora + GNOME + Wayland/XWayland; Niri is
+The primary tested configuration is Fedora + GNOME + Wayland/XWayland; Linux Mint Cinnamon/X11 is also supported through Mochi's native X11 path. Niri is
 experimental. On first GNOME Wayland installation, log out/in once so the helper
 can load. See [current known issues](../../README.md#known-issues) before testing.
 
@@ -14,9 +14,8 @@ installation, editable installs pick up source edits after restarting Mochi.
 
 Primary environment:
 
-- Fedora Linux
-- GNOME
-- Wayland session
+- Fedora Linux + GNOME + Wayland/XWayland (primary tested environment)
+- Linux Mint Cinnamon + X11 (supported X11 path)
 - Python 3.11+
 
 Mochi may use XWayland for behavior that native GNOME Wayland restrictions make difficult.
@@ -25,7 +24,7 @@ Mochi may use XWayland for behavior that native GNOME Wayland restrictions make 
 
 On Fedora, the [installer](../../install.sh) handles the full runtime dependency
 list and GNOME helper setup. Complete the README installation first, then use a
-separate development environment below. Other distributions need manual dependency setup.
+separate development environment below. Linux Mint/Debian/Ubuntu dependencies are handled by the installer; other distributions may need manual dependency setup.
 
 ## Clone the repository
 

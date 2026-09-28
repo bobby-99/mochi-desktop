@@ -234,6 +234,16 @@ class WindowPlacementMonitorTests(unittest.TestCase):
         self.assertEqual((position.x, position.y), (2800, 274))
         move_window.assert_called_once_with(test_window, 2800, 274)
 
+    def test_x11_positioning_does_not_require_layer_shell(self) -> None:
+        monitors = MonitorList(monitor(0, 0, 1920, 1080))
+        placement = object.__new__(WindowPlacement)
+        placement.window = window(monitors, 112, 112)
+        placement.layer_shell_enabled = False
+
+        position = WindowPlacement.clamp_position(placement, 100, 100)
+
+        self.assertEqual((position.x, position.y), (100, 100))
+
     def test_gap_position_uses_the_nearest_monitor(self) -> None:
         monitors = MonitorList(
             monitor(0, 0, 1000, 800),

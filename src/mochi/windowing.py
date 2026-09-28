@@ -1,4 +1,4 @@
-"""Optional Wayland layer-shell integration kept out of the GTK application."""
+"""Wayland layer-shell integration with a portable X11 fallback."""
 
 from __future__ import annotations
 
@@ -83,9 +83,9 @@ class WindowPlacement:
         return True
 
     def _apply_x11_sticky_properties(self) -> bool:
-        """Make the XWayland window sticky and non-focus-stealing.
+        """Make the X11/XWayland window sticky and non-focus-stealing.
 
-        On GNOME Wayland, Mochi runs as a regular X11 window managed by Mutter.
+        On X11 desktops such as Cinnamon, and on GNOME Wayland where Mochi uses XWayland, Mochi runs as a regular X11 window managed by the window manager.
         By default that binds the window to a single workspace and lets Mutter
         focus it (and its workspace) on interaction. The EWMH properties applied
         below turn Mochi into a desktop-wide overlay instead.
@@ -100,10 +100,10 @@ class WindowPlacement:
             # Not realized yet - keep retrying on the next idle tick.
             return GLib.SOURCE_CONTINUE
 
-        from mochi.x11 import apply_sticky_dock_properties
+        from mochi.x11 import apply_sticky_overlay_properties
 
-        if apply_sticky_dock_properties(self.window):
-            self._logger.info("Applied X11 sticky/dock properties to Mochi window")
+        if apply_sticky_overlay_properties(self.window):
+            self._logger.info("Applied X11 sticky overlay properties to Mochi window")
 
         return GLib.SOURCE_REMOVE
 

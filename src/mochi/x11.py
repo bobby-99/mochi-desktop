@@ -1,4 +1,4 @@
-"""Small X11 window-manager helpers used by the GNOME XWayland fallback."""
+"""Small EWMH/X11 helpers used by Mochi desktop-overlay windows."""
 
 from __future__ import annotations
 
@@ -163,18 +163,18 @@ def _send_wm_desktop_client_message(
         ctypes.byref(event),
     )
 
-def apply_sticky_dock_properties(window: Gtk.Window) -> bool:
+def apply_sticky_overlay_properties(window: Gtk.Window) -> bool:
     """Make an XWayland window a sticky, non-focus-stealing desktop overlay.
 
     On GNOME Wayland, Mochi runs as a regular X11 window managed by Mutter,
-    which binds the window to a single workspace and lets Mutter focus it on
-    interaction. This helper marks the window as a dock and then asks the WM
-    to make it sticky, skip the taskbar/pager, and stay above.
+    which binds the window to a single workspace and lets the window manager focus it
+    on interaction. Keep normal-window semantics and request only the EWMH states
+    needed for a desktop overlay.
 
-    EWMH expects the window type to be set before the window is mapped, and
-    state/desktop changes to be sent as ClientMessages to the root window
-    once the window is managed. The helper mirrors that split so Mutter does
-    not race or overwrite our requests.
+    Deliberately do not classify Mochi as _NET_WM_WINDOW_TYPE_DOCK. Dock is
+    intended for panels/taskbars and can receive special placement treatment;
+    Cinnamon works better with ordinary window semantics plus standard EWMH
+    sticky/above/skip-taskbar state.
     """
     surface = window.get_surface()
     if GdkX11 is None or not isinstance(surface, GdkX11.X11Surface):
@@ -220,30 +220,10 @@ def apply_sticky_dock_properties(window: Gtk.Window) -> bool:
     if not display:
         return False
 
-    _XA_ATOM = 4
     _NET_WM_STATE_ADD = 1
 
     try:
         window_id = surface.get_xid()
-
-        # Window type must be set before the WM starts managing the window.
-        # GdkX11 X11Surface.get_xid() is the same id the WM sees in
-        # MapRequest, so writing it here is the correct pre-map step.
-        dock_atom = x11.XInternAtom(
-            display, b"_NET_WM_WINDOW_TYPE_DOCK", False
-        )
-        type_prop = x11.XInternAtom(display, b"_NET_WM_WINDOW_TYPE", False)
-        type_values = (ctypes.c_ulong * 1)(dock_atom)
-        x11.XChangeProperty(
-            display,
-            window_id,
-            type_prop,
-            _XA_ATOM,
-            32,
-            0,
-            ctypes.cast(type_values, ctypes.c_void_p),
-            1,
-        )
 
         # State and desktop changes must go through ClientMessages once the
         # window is mapped so the WM owns the update, matching the protocol
