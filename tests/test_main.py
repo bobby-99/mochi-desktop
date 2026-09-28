@@ -25,6 +25,18 @@ class DisplayBackendTests(unittest.TestCase):
         self.assertTrue(configure_display_backend(environment))
         self.assertEqual(environment["GDK_BACKEND"], "x11")
 
+    def test_cinnamon_x11_keeps_native_x11_backend(self) -> None:
+        environment = {
+            "XDG_SESSION_TYPE": "x11",
+            "XDG_CURRENT_DESKTOP": "X-Cinnamon",
+            "XDG_SESSION_DESKTOP": "cinnamon",
+            "DISPLAY": ":0",
+            "GDK_BACKEND": "x11",
+        }
+
+        self.assertFalse(configure_display_backend(environment))
+        self.assertEqual(environment["GDK_BACKEND"], "x11")
+
     def test_mochi_native_wayland_opt_out_is_preserved(self) -> None:
         environment = {
             "XDG_SESSION_TYPE": "wayland",
