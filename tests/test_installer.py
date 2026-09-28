@@ -277,6 +277,21 @@ def test_gnome_detection_installs_gnome_dependency_and_helper(
     assert "GNOME desktop awareness is active" in result.stdout
 
 
+def test_cinnamon_desktop_skips_gnome_dependency_and_helper(tmp_path: Path) -> None:
+    result, log_dir = _run_installer(
+        tmp_path,
+        current_desktop="X-Cinnamon",
+        session_desktop="cinnamon",
+        with_gnome_extensions=False,
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "gnome-shell" not in _read_log(log_dir, "rpm.log")
+    output = result.stdout + result.stderr
+    assert "Skipping GNOME helper" in output
+    assert "Non-GNOME desktop detected" in output
+
+
 def test_non_gnome_desktop_skips_gnome_dependency_and_helper(tmp_path: Path) -> None:
     result, log_dir = _run_installer(
         tmp_path,
