@@ -1,6 +1,8 @@
+import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from mochi.care import BondState
 from mochi.config import ConfigStore, Position
@@ -144,6 +146,70 @@ class ConfigStoreTests(unittest.TestCase):
                 store.load_bond_state(),
                 BondState(level=2, xp=0),
             )
+
+    def test_saves_quarantine_malformed_config_without_clobbering_backups(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "config.json"
+            malformed = '{"volume": 0.4, "bond_level": 8, "bond_xp": 300,'
+            path.write_text(malformed, encoding="utf-8")
+            store = ConfigStore(path)
+
+            self.assertEqual(store.load_bond_state(), BondState())
+            self.assertEqual(path.read_text(encoding="utf-8"), malformed)
+
+            store.save_bond_state(BondState(level=2, xp=10))
+
+            backups = list(path.parent.glob("config.json.corrupt-*"))
+            self.assertEqual(len(backups), 1)
+            self.assertEqual(backups[0].read_text(encoding="utf-8"), malformed)
+            self.assertEqual(
+                json.loads(path.read_text(encoding="utf-8")),
+                {"bond_level": 2, "bond_xp": 10},
+            )
+
+            non_object_json = "[]"
+            path.write_text(non_object_json, encoding="utf-8")
+            store.save_volume(0.5)
+
+            backups = list(path.parent.glob("config.json.corrupt-*"))
+            self.assertEqual(len(backups), 2)
+            self.assertEqual(
+                {backup.read_text(encoding="utf-8") for backup in backups},
+                {malformed, non_object_json},
+            )
+            self.assertEqual(
+                json.loads(path.read_text(encoding="utf-8")),
+                {"volume": 0.5},
+            )
+
+    def test_reset_position_preserves_malformed_config_for_recovery(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "config.json"
+            malformed = '{"bond_level": 8, "bond_xp": 300, '
+            path.write_text(malformed, encoding="utf-8")
+
+            ConfigStore(path).reset_position()
+
+            self.assertFalse(path.exists())
+            backups = list(path.parent.glob("config.json.corrupt-*"))
+            self.assertEqual(len(backups), 1)
+            self.assertEqual(backups[0].read_text(encoding="utf-8"), malformed)
+
+    def test_permission_error_does_not_trigger_corrupt_config_recovery(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "config.json"
+            contents = '{"bond_level": 8, "bond_xp": 300}\n'
+            path.write_text(contents, encoding="utf-8")
+            store = ConfigStore(path)
+
+            with patch.object(Path, "read_text", side_effect=PermissionError("denied")):
+                with self.assertRaises(PermissionError):
+                    store.load_bond_state()
+                with self.assertRaises(PermissionError):
+                    store.save_bond_state(BondState(level=2, xp=10))
+
+            self.assertEqual(path.read_text(encoding="utf-8"), contents)
+            self.assertEqual(list(path.parent.glob("config.json.corrupt-*")), [])
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ import json
 import logging
 import os
 from pathlib import Path
+from uuid import uuid4
 
 from mochi.care import BondState
 
@@ -246,8 +247,8 @@ class ConfigStore:
             self._logger.info("Saved Mochi position reset")
         except FileNotFoundError:
             pass
-        except (TypeError, ValueError, json.JSONDecodeError):
-            self.path.unlink(missing_ok=True)
+        except (TypeError, ValueError) as error:
+            self._preserve_corrupt_config(error)
 
     def _load(self) -> dict[str, object]:
         data = json.loads(self.path.read_text(encoding="utf-8"))
@@ -258,8 +259,31 @@ class ConfigStore:
     def _load_or_empty(self) -> dict[str, object]:
         try:
             return self._load()
-        except (FileNotFoundError, TypeError, ValueError, json.JSONDecodeError):
+        except FileNotFoundError:
             return {}
+        except (TypeError, ValueError) as error:
+            self._preserve_corrupt_config(error)
+            return {}
+
+    def _preserve_corrupt_config(self, error: Exception) -> None:
+        """Move unreadable JSON aside before a caller replaces the config."""
+        backup_path = self.path.with_name(
+            f"{self.path.name}.corrupt-{uuid4().hex}"
+        )
+        while backup_path.exists():
+            backup_path = self.path.with_name(
+                f"{self.path.name}.corrupt-{uuid4().hex}"
+            )
+        try:
+            self.path.replace(backup_path)
+        except FileNotFoundError:
+            return
+        self._logger.warning(
+            "Invalid config %s preserved as %s: %s",
+            self.path,
+            backup_path,
+            error,
+        )
 
     def _save(self, data: dict[str, object]) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)

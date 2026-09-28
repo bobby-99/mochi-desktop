@@ -1380,6 +1380,11 @@ Default config path follows XDG_CONFIG_HOME, falling back to:
 
 Config writes use a temporary file and replace pattern.
 
+Missing configuration starts from defaults. If a save encounters malformed
+JSON or a non-object JSON root, the original file is moved to a uniquely named
+`config.json.corrupt-*` backup before a fresh configuration is written. Read
+permission and other I/O errors remain errors and do not trigger this recovery.
+
 When adding persistent state:
 
 1. keep it small;
