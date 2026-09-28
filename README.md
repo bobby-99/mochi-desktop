@@ -259,7 +259,7 @@ model.
 
 ### Give Mochi a corner of your desktop
 
-The installer has a supported dependency path for Fedora. It creates a private
+The installer has supported dependency paths for Fedora and Debian/Ubuntu-based systems such as Linux Mint. It creates a private
 Python environment, adds Mochi to the application grid, and installs `mochi`,
 `mochi-update`, and `mochi-uninstall` under `~/.local/bin`. On GNOME, it also installs the
 optional awareness helper when GNOME extension tooling is available.
@@ -356,7 +356,7 @@ Global shortcuts require the GNOME helper.
 
 ## Compatibility
 
-- **Primary target:** Fedora + GNOME + Wayland.
+- **Primary tested environment:** Fedora + GNOME + Wayland.
 - **Community verified:** CachyOS + Umbriel + Wayland — installation and runtime
   confirmed working by the reporter of [#125](https://github.com/miflow13/mochi-desktop/issues/125)
   after the portability fixes in [#126](https://github.com/miflow13/mochi-desktop/pull/126).
@@ -403,7 +403,7 @@ More detailed recovery steps are in
 
 ## Built for Linux
 
-`Python` · `GTK4` · `PyGObject` · `Cairo` · `GNOME Shell` · `D-Bus` · `Wayland` · `XWayland`
+`Python` · `GTK4` · `PyGObject` · `Cairo` · `D-Bus` · `X11` · `Wayland` · `XWayland`
 
 ## Development
 
